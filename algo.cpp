@@ -15,20 +15,27 @@ Solver::Solver(const int N) :
     }
 }
 
-auto Solver::GetResults() const noexcept -> std::vector<std::pair<int,int>>
+auto Solver::GetIndexes() const noexcept -> std::vector<long>
 {
     return results;
 }
+auto Solver::GetMin() const noexcept -> long 
+{
+    return min;
+}
 
-// powers 2 -> 1, 2, 4, 8, ...
-auto constexpr Solver::SumBits(int n1, const int n2, const int j) noexcept -> int
+// i - первое число, биты которого будут складываться,
+// j - число на которое сдвиагется n
+auto constexpr Solver::SumBits(long n, const long j) noexcept -> int
 {
     auto sum {0};
-    n1 = n1 >> j;
+    n = (n) ^ (n >> j);
+    // n1 xor n2
+    // если бит == 0 -> 1, иначе -1
 
     for (int i = 0; i < N - j; i++)
     {
-        sum += (((n1 & masks[i]) == 0) ? -1 : 1) * (((n2 & masks[i]) == 0) ? -1 : 1);
+        sum += (((n & masks[i]) == 0) ? 1 : -1);
     }
 
     return sum;
@@ -38,16 +45,16 @@ auto Solver::SolveProblem() noexcept -> bool
 {
     auto n_power {std::pow(2, N - 1)};
     std::fstream file("./A_MAX");
-
-    for (auto i {0}; i <= n_power; ++i)
+    results.reserve(100);
+    for (long i {0}; i < n_power; ++i)
     {
         // post async task to the thread pool
-        asio::post(pool, [&]()
+        asio::post(pool, [this, i]()
         {
             auto max {std::numeric_limits<long>::min()};
             for (auto j {1}; j < N; ++j)
             {
-                max = std::max(max, static_cast<long>(SumBits(i, i, j)));
+                max = std::max(max, static_cast<long>(SumBits(i, j)));
             }
 
             if (max <= min)
@@ -58,18 +65,56 @@ auto Solver::SolveProblem() noexcept -> bool
                     min = max;
                     results.clear();
                 }
-                results.emplace_back(min, i);
+                results.emplace_back(i);
+
             }
 
             std::lock_guard<std::mutex> lock {mutex}; // sync write to the file
-            file << "A: "<< max << " number: " << i << std::endl;
         });
     }
     pool.join();
 
     if (!results.empty())
     {
-        file << "MIN A " << results[0].first << " index: " << results[0].second << std::endl;
+        std::cout << "MIN A " << min << " index: " << results[0] << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cerr << "results vector is empty" << std::endl;
+        return false;
+    }
+}
+
+auto Solver::SolveProblemSlow() noexcept -> bool
+{
+    auto n_power {std::pow(2, N - 1)};
+    std::fstream file("./A_MAX");
+    for (auto i {0}; i <= n_power; ++i)
+    {
+        // post async task to the thread pool
+            auto max {std::numeric_limits<long>::min()};
+            for (auto j {1}; j < N; ++j)
+            {
+                max = std::max(max, static_cast<long>(SumBits(i, j)));
+            }
+
+            if (max <= min)
+            {
+
+                if (max < min)
+                {
+                    min = max;
+                    results.clear();
+                }
+                results.emplace_back(i);
+            }
+
+    }
+
+    if (!results.empty())
+    {
+        std::cout << "MIN A " << min << " index: " << results[0] << std::endl;
         return true;
     }
     else
