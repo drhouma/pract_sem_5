@@ -27,12 +27,12 @@ public:
 
     [[nodiscard]] auto SolveProblem() noexcept -> bool;
     [[nodiscard]] auto SolveProblemSlow() noexcept -> bool;
-    [[nodiscard]] auto constexpr SumBits(long n, const long j) noexcept -> int;
+    [[nodiscard]] auto constexpr SumBits(unsigned long n, const long j) noexcept -> int;
     [[nodiscard]] auto  GetIndexes() const noexcept -> std::vector<long>;
     [[nodiscard]] auto  GetMin() const noexcept -> long;
 
 private:
-    std::atomic_long min {std::numeric_limits<long>::max()};
+    std::atomic_ulong min {std::numeric_limits<long>::max()};
 
 private:
     int N {0};

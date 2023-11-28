@@ -26,7 +26,7 @@ auto Solver::GetMin() const noexcept -> long
 
 // i - первое число, биты которого будут складываться,
 // j - число на которое сдвиагется n
-auto constexpr Solver::SumBits(long n, const long j) noexcept -> int
+auto constexpr Solver::SumBits(unsigned long n, const long j) noexcept -> int
 {
     auto sum {0};
     n = (n) ^ (n >> j);
@@ -45,8 +45,8 @@ auto Solver::SolveProblem() noexcept -> bool
 {
     auto n_power {std::pow(2, N - 1)};
     std::fstream file("./A_MAX");
-    results.reserve(100);
-    for (long i {0}; i < n_power; ++i)
+    // results.reserve(100);
+    for (unsigned long i {0}; i < n_power; ++i)
     {
         // post async task to the thread pool
         asio::post(pool, [this, i]()
@@ -63,9 +63,9 @@ auto Solver::SolveProblem() noexcept -> bool
                 if (max < min)
                 {
                     min = max;
-                    results.clear();
+                    // results.clear();
                 }
-                results.emplace_back(i);
+                // results.emplace_back(i);
 
             }
 
