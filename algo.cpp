@@ -6,10 +6,8 @@ Solver::Solver(const int N) :
     N{N},
     pool{}
 {
-    auto n_power {std::pow(2, N)};
-    masks[0] = 1;
 
-    for (auto i {1}; i < n_power - 1; i *= 2)
+    for (auto i {0}; i < N ; i++)
     {
         masks[i] = static_cast<int>(std::pow(2, i));
     }
@@ -28,7 +26,7 @@ auto Solver::GetMin() const noexcept -> long
 // j - число на которое сдвиагется n
 auto constexpr Solver::SumBits(unsigned long n, const long j) noexcept -> int
 {
-    auto sum {0};
+    auto sum {0};      
     n = (n) ^ (n >> j);
     // n1 xor n2
     // если бит == 0 -> 1, иначе -1
@@ -54,7 +52,8 @@ auto Solver::SolveProblem() noexcept -> bool
             auto max {std::numeric_limits<long>::min()};
             for (auto j {1}; j < N; ++j)
             {
-                max = std::max(max, static_cast<long>(SumBits(i, j)));
+
+                max = std::max(max, static_cast<long>(abs(SumBits(i, j))));
             }
 
             if (max <= min)
@@ -63,9 +62,9 @@ auto Solver::SolveProblem() noexcept -> bool
                 if (max < min)
                 {
                     min = max;
-                    // results.clear();
+                    results.clear();
                 }
-                // results.emplace_back(i);
+                results.emplace_back(i);
 
             }
 
@@ -94,10 +93,13 @@ auto Solver::SolveProblemSlow() noexcept -> bool
     {
         // post async task to the thread pool
             auto max {std::numeric_limits<long>::min()};
+            int {};
             for (auto j {1}; j < N; ++j)
             {
-                max = std::max(max, static_cast<long>(SumBits(i, j)));
+
+                max = std::max(max, static_cast<long>(abs(SumBits(i, j))));
             }
+            file << i << " " << max << '\n';
 
             if (max <= min)
             {
