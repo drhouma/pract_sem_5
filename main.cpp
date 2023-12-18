@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "algo.h"
+#include <chrono>
 
 auto CopySumBits(unsigned long n, const long j) noexcept -> int
 {
@@ -33,9 +34,10 @@ int main() {
 
     std::fstream file("./results");
     file << "N " << "A " << "C " << "i1 " << "i2" << std::endl;
+    auto start = std::chrono::system_clock::now();
     for (int i = 3; i <= std::stoi(input); i++) {
         Solver solver(i);
-        solver.SolveProblemSlow();
+        solver.SolveProblem();
         file << i << ' ';
         file << solver.GetMin() << ' ';
         file << solver.GetCount() << ' ';
@@ -43,5 +45,5 @@ int main() {
         file << solver.GetMaxIndex() << std::endl;
     }
     auto end = std::chrono::system_clock::now();
-
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(); 
 }
