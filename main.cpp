@@ -33,28 +33,31 @@ int main() {
     std::cin >> input;
 
 
-    Solver solver {std::stoi(input)};
+    // Solver solver {std::stoi(input)};
 
-    const auto start{std::chrono::steady_clock::now()};
-    if (!solver.SolveProblem())
-    {
-        std::cerr << "cannot solve the problem" << std::endl;
-        return 1;
-    }
-    const auto end{std::chrono::steady_clock::now()};
-    const std::chrono::duration<double> elapsed_seconds{end - start};
-    std::cout <<"multithread, time elapsed: " << elapsed_seconds.count() << '\n';
+    // const auto start{std::chrono::steady_clock::now()};
+    // const auto end{std::chrono::steady_clock::now()};
+    // const std::chrono::duration<double> elapsed_seconds{end - start};
+    // std::cout <<"multithread, time elapsed: " << elapsed_seconds.count() << '\n';
+    // if (!solver.SolveProblem())
+    // {
+    //     std::cerr << "cannot solve the problem" << std::endl;
+    //     return 1;
+    // }
 
     std::fstream file("./results");
-
-    auto results {solver.GetIndexes()};
-
-    file << "MIN A in LIST OF MAX A: " << solver.GetMin() << std::endl;
-    file << "INDEXES:" << std::endl;
-
-    for (const auto &elem : results)
-    {
-        file << elem << std::endl;
+    file << "N " << "A " << "C " << "i1 " << "i2" << std::endl;
+    for (int i = 3; i < std::stoi(input); i++) {
+        Solver solver(i);
+        solver.SolveProblem();
+        file << i << ' ';
+        file << solver.GetMin() << ' ';
+        file << solver.GetCount() << ' ';
+        file << solver.GetMinIndex() << ' ';
+        file << solver.GetMaxIndex() << std::endl;
     }
+
+    // file << "INDEXES:" << std::endl;
+
     // std::cout << "\nres: "<< CopySumBits(16, 1) << '\n'; 
 }
