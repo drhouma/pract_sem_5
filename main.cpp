@@ -32,31 +32,20 @@ int main() {
     std::cout << "Input N: ";
     std::cin >> input;
 
-
-    // Solver solver {std::stoi(input)};
-
-    // const auto start{std::chrono::steady_clock::now()};
-    // const auto end{std::chrono::steady_clock::now()};
-    // const std::chrono::duration<double> elapsed_seconds{end - start};
-    // std::cout <<"multithread, time elapsed: " << elapsed_seconds.count() << '\n';
-    // if (!solver.SolveProblem())
-    // {
-    //     std::cerr << "cannot solve the problem" << std::endl;
-    //     return 1;
-    // }
-
     std::fstream file("./results");
     file << "N " << "A " << "C " << "i1 " << "i2" << std::endl;
-    for (int i = 3; i < std::stoi(input); i++) {
+    auto start = std::chrono::system_clock::now();
+    for (int i = 3; i <= std::stoi(input); i++) {
         Solver solver(i);
-        solver.SolveProblem();
+        solver.SolveProblemSlow();
         file << i << ' ';
         file << solver.GetMin() << ' ';
         file << solver.GetCount() << ' ';
         file << solver.GetMinIndex() << ' ';
         file << solver.GetMaxIndex() << std::endl;
     }
-
+    auto end = std::chrono::system_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     // file << "INDEXES:" << std::endl;
 
     // std::cout << "\nres: "<< CopySumBits(16, 1) << '\n'; 
