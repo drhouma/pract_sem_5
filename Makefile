@@ -1,2 +1,2 @@
-main:
-	g++ main.cpp algo.cpp
+run:
+	./build/bin/async_solver

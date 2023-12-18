@@ -1,43 +1,131 @@
 #include "algo.h"
-// powers 2 -> 1, 2, 4, 8, ...
-auto Solver::SumBits(int n1, int n2, int j) -> int {
-    int sum{0};
-    n1 = n1 >> j;
-    for (int i = 0; i < _N - j; i++) {
-        sum += (((n1 & _mask[i]) == 0) ? -1 : 1) * (((n2 & _mask[i]) == 0) ? -1 : 1);
+
+#include <boost/asio/post.hpp>
+
+Solver::Solver(const int N) :
+    N{N},
+    pool{}
+{
+
+    for (auto i {0}; i < N ; i++)
+    {
+        masks[i] = static_cast<int>(std::pow(2, i));
     }
+}
+
+auto Solver::GetIndexes() const noexcept -> std::vector<long>
+{
+    return results;
+}
+auto Solver::GetMin() const noexcept -> long 
+{
+    return min;
+}
+
+// i - первое число, биты которого будут складываться,
+// j - число на которое сдвиагется n
+auto constexpr Solver::SumBits(unsigned long n, const long j) noexcept -> int
+{
+    auto sum {0};      
+    n = (n) ^ (n >> j);
+    // n1 xor n2
+    // если бит == 0 -> 1, иначе -1
+
+    for (int i = 0; i < N - j; i++)
+    {
+        sum += (((n & masks[i]) == 0) ? 1 : -1);
+    }
+
     return sum;
 }
 
-auto Solver::SolveProblem() -> void {
-    long int n_power = pow(2, _N - 1);
+auto Solver::SolveProblem() noexcept -> bool
+{
+    auto n_power {std::pow(2, N - 1)};
     std::fstream file("./A_MAX");
+    // results.reserve(100);
+    
+    for (unsigned long i {0}; i < n_power; ++i)
+    {
+        // post async task to the thread pool
+        asio::post(pool, [this, i, &file]()
+        {
+            auto max {std::numeric_limits<long>::min()};
+            for (auto j {1}; j < N; ++j)
+            {
 
-
-    for (long int i = 0; i <= n_power; i++) {
-        long int max = LLONG_MIN;
-        for (int j = 1; j < _N; j++) {
-            int num = SumBits(i, i, j);
-            if (num > max) max = num;
-        }
-
-        file << "A: "<< max << " number: " << i << std::endl;
-        if (max <= min){
-            if (max < min) {
-                min = max;
-                _results.clear();
+                max = std::max(max, static_cast<long>(abs(SumBits(i, j))));
             }
-            _results.push_back(std::make_pair(min, i));
-        }
+
+            std::lock_guard<std::mutex> lock {mutex}; // sync changes on min and results
+            file << i << " " << max << '\n';
+            if (max <= min)
+            {
+                if (max < min)
+                {
+                    min = max;
+                    results.clear();
+                    counter = 0;
+                    min_index = i;
+                } else {
+                    max_index = i;
+                }
+                // results.emplace_back(i);
+                counter++;
+            }
+
+            // std::lock_guard<std::mutex> lock {mutex}; // sync write to the file
+        });
     }
-    file << "MIN A "<< _results[0].first << " index: " << _results[0].second << std::endl;
+    pool.join();
+
+    return true;
 }
 
+auto Solver::SolveProblemSlow() noexcept -> bool
+{
+    auto n_power {std::pow(2, N - 1)};
+    std::fstream file("./A_MAX");
+    for (auto i {0}; i <= n_power; ++i)
+    {
+        // post async task to the thread pool
+            auto max {std::numeric_limits<long>::min()};
+            int {};
+            for (auto j {1}; j < N; ++j)
+            {
 
-Solver::Solver(int N) : _N(N) {
-    long int n_power = pow(2, _N);
-    _mask[0] = 1;
-    for (long int i = 1; i < n_power - 1; i *= 2) {   
-        _mask[i] = pow(2,i);
+                max = std::max(max, static_cast<long>(abs(SumBits(i, j))));
+            }
+            file << i << " " << max << '\n';
+
+            if (max <= min)
+            {
+
+                if (max < min)
+                {
+                    min = max;
+                    results.clear();
+                }
+                results.emplace_back(i);
+            }
+
+    }
+
+    if (!results.empty())
+    {
+        std::cout << "MIN A " << min << " index: " << results[0] << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cerr << "results vector is empty" << std::endl;
+        return false;
     }
 }
+
+/**
+ * @note
+ * 1. lock_guard calls mutex.lock() on constructor
+ * 2. lock_guard calls mutex.unlock() on destructor
+ * 3. thread_pool join waits termination of all posted tasks
+ */
